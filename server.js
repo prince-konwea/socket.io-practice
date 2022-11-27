@@ -1,18 +1,36 @@
-const cors = require("cors");
+const path = require("path");
+const http = require("http");
+const express = require("express");
+const socketio = require("socket.io");
 
-app.use(cors({
-    origin: '*'
-}));
+
+const app = express();
+const server = http.createServer(app);
+const io = socketio(server)
+
+app.use(express.static(path.join(__dirname, "public")))
 
 
-const io = require("socket.io")(5000);
+
+// Run when client connects
 
 io.on("connection", socket => {
-    socket.emit("Chat-message", "Hello word")
+  
+// welcome current user
+  socket.emit("message", "welcome to chatcord");
+
+// broadcast when a user connects
+
+socket.broadcast.emit("message", "A user has joined the chat")
+
+// Runs when user disconnects
+
+socket.on("disconnect", () => {
+    io.emit("message", "A user has left the chat")
+})
 })
 
-const socket = io("http://localhost:5000");
+const PORT = 5000 || process.env.PORT;
 
-socket.on("chat-message", data =>{
-    console.log(data)
-})
+server.listen(PORT, () => console.log(`server running on port ${PORT}`));
+
